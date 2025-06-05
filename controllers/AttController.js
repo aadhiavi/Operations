@@ -46,11 +46,10 @@ const processData = (filePath) => {
 
 router.post('/att-upload', upload.single('file'), async (req, res) => {
     const filePath = req.file.path;
-    structuredData = {}; // Reset for each upload
+    structuredData = {};
     processData(filePath);
 
     const createdRecords = [];
-    const updatedRecords = [];
     const skippedRecords = [];
     const missPunches = [];
 
@@ -59,30 +58,21 @@ router.post('/att-upload', upload.single('file'), async (req, res) => {
             for (const date in structuredData[id]) {
                 let { in: inTime, out: outTime } = structuredData[id][date];
 
-                // Handle missing punch
                 if (!inTime || !outTime || inTime === outTime) {
                     const time = inTime || outTime;
                     inTime = outTime = time;
                     missPunches.push({ id, date, time });
                 }
 
-                const existing = await Attendance.findOne({ id, date });
-
-                if (!existing) {
+                try {
                     const newRecord = new Attendance({ id, date, in: inTime, out: outTime });
                     await newRecord.save();
                     createdRecords.push({ id, date });
-                } else {
-                    const shouldUpdate =
-                        (inTime < existing.in) || (outTime > existing.out);
-
-                    if (shouldUpdate) {
-                        existing.in = inTime < existing.in ? inTime : existing.in;
-                        existing.out = outTime > existing.out ? outTime : existing.out;
-                        await existing.save();
-                        updatedRecords.push({ id, date });
+                } catch (err) {
+                    if (err.code === 11000) {
+                        skippedRecords.push({ id, date, reason: 'Duplicate – record already exists' });
                     } else {
-                        skippedRecords.push({ id, date, reason: 'Existing record is better or same' });
+                        throw err;
                     }
                 }
             }
@@ -91,9 +81,8 @@ router.post('/att-upload', upload.single('file'), async (req, res) => {
         res.json({
             message: 'Attendance file processed.',
             created: createdRecords,
-            updated: updatedRecords,
             skipped: skippedRecords,
-            missPunches: missPunches
+            missPunches
         });
     } catch (error) {
         console.error('Error processing attendance:', error);
@@ -101,30 +90,29 @@ router.post('/att-upload', upload.single('file'), async (req, res) => {
     }
 });
 
+router.put('/att-manual-update-time', authenticate, isAdmin, async (req, res) => {
+  const { id, date, in: inTime, out: outTime } = req.body;
 
-router.post('/att-manual-post', async (req, res) => {
-    const { id, date, in: inTime, out: outTime } = req.body;
+  if (!id || !date || !inTime || !outTime) {
+    return res.status(400).json({ message: 'All fields (id, date, in, out) are required.' });
+  }
 
-    if (!id || !date || !inTime || !outTime) {
-        return res.status(400).json({ message: 'All fields (id, date, in, out) are required.' });
+  try {
+    const record = await Attendance.findOne({ id, date });
+
+    if (!record) {
+      return res.status(404).json({ message: 'Attendance record not found.' });
     }
-    try {
-        const existingAttendance = await Attendance.findOne({ id, date });
-        if (existingAttendance) {
-            return res.status(404).json({ message: 'Attendance record already exists for this ID and date.' });
-        }
-        const attendance = new Attendance({
-            id,
-            date,
-            in: inTime,
-            out: outTime,
-        });
-        await attendance.save();
-        res.json({ message: 'Attendance record created successfully.' });
-    } catch (error) {
-        console.error('Error saving attendance record:', error);
-        res.status(500).json({ message: 'Server error while saving attendance data.' });
-    }
+
+    record.in = inTime;
+    record.out = outTime;
+    await record.save();
+
+    res.json({ message: 'Attendance updated successfully.' });
+  } catch (error) {
+    console.error('Error updating attendance:', error);
+    res.status(500).json({ message: 'Server error while updating attendance.' });
+  }
 });
 
 router.get('/att-data/:id', async (req, res) => {
@@ -150,7 +138,7 @@ router.get('/att-data/date/:date', async (req, res) => {
         res.status(500).json({ message: 'Error fetching data from the database' });
     }
 });
-   
+
 router.get('/att-data-all', authenticate, isAdmin, async (req, res) => {
     try {
         const attendanceData = await Attendance.find({});
@@ -161,29 +149,28 @@ router.get('/att-data-all', authenticate, isAdmin, async (req, res) => {
 }
 )
 
-router.put('/att-manual', async (req, res) => {
+router.post('/att-manual-post', async (req, res) => {
     const { id, date, in: inTime, out: outTime } = req.body;
 
-    if (!inTime || !outTime) {
+    if (!id || !date || !inTime || !outTime) {
         return res.status(400).json({ message: 'All fields (id, date, in, out) are required.' });
     }
 
     try {
         const existing = await Attendance.findOne({ id, date });
-
-        if (!existing) {
-            return res.status(404).json({ message: 'Attendance record not found. Cannot update non-existent entry.' });
+        if (existing) {
+            return res.status(409).json({ message: 'Attendance already exists for this ID and date.' });
         }
 
-        existing.in = inTime;
-        existing.out = outTime;
-        await existing.save();
-        res.json({ message: 'Attendance record updated successfully.' });
+        const attendance = new Attendance({ id, date, in: inTime, out: outTime });
+        await attendance.save();
+        res.json({ message: 'Attendance record created successfully.' });
     } catch (error) {
-        console.error('Manual update error:', error);
-        res.status(500).json({ message: 'Server error while updating attendance data.' });
+        console.error('Error saving attendance:', error);
+        res.status(500).json({ message: 'Server error while saving attendance.' });
     }
 });
+
 
 
 module.exports = router;

@@ -7,5 +7,6 @@ const attendanceSchema = new mongoose.Schema({
     out: { type: String, required: true }
 });
 
+attendanceSchema.index({ id: 1, date: 1 }, { unique: true });
 const Attendance = mongoose.model('Attendance', attendanceSchema);
 module.exports = Attendance;

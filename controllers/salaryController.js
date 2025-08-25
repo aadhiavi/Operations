@@ -1,4 +1,3 @@
-const Payroll = require('../models/PayRoll');
 const SalaryFixed = require('../models/SalaryFixed');
 const User = require('../models/User');
 const path = require('path');
@@ -8,6 +7,7 @@ const handlebars = require('handlebars');
 const Employee = require('../models/Employee');
 const inWords = require('inr-words');
 const { sendPaySlip } = require('../config/mailer');
+const Payroll = require('../models/PayRoll');
 
 
 const getAllUsers = async (req, res) => {

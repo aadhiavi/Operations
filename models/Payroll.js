@@ -85,4 +85,3 @@ payrollSchema.index({ userId: 1, month: 1, year: 1, isDraft: 1 }, { unique: true
 
 const Payroll = mongoose.model('Payroll', payrollSchema);
 module.exports = Payroll;
-

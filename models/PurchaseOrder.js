@@ -17,8 +17,8 @@ const PurchaseOrderSchema = new mongoose.Schema({
 
     // Requisition Reference
     requisition: {
-        number: { type: String },
-        date: { type: Date }
+        number: String,
+        _id: { type: mongoose.Schema.Types.ObjectId, ref: "MaterialRequisition" }
     },
 
     // Vendor Info
@@ -45,6 +45,8 @@ const PurchaseOrderSchema = new mongoose.Schema({
     // Items Ordered
     items: [
         {
+            boqItemId: { type: mongoose.Schema.Types.ObjectId, ref: "TestBoqItem", required: true },
+            requisitionItemId: { type: mongoose.Schema.Types.ObjectId, required: true }, // <-- add this
             itemName: { type: String },
             category: { type: String },
             subCategory: { type: String },
@@ -77,10 +79,10 @@ const PurchaseOrderSchema = new mongoose.Schema({
     igstAmount: { type: Number, default: 0 },
 
     //Totals
-    subtotal: { type: Number, required: true },
+    subtotal: { type: Number },
     gstAdd: { type: Number, default: 0 },
     gstMinus: { type: Number, default: 0 },
-    grandTotal: { type: Number, required: true },
+    grandTotal: { type: Number },
     amountInWords: { type: String },
 
     // Payment & Delivery Terms

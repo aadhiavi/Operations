@@ -1,8 +1,8 @@
 const Supplier = require("../models/Supplier");
 
 const postSupplier = async (req, res) => {
-    const { supplierName, address, phoneNumber, GSTNo } = req.body;
-    if (!supplierName || !address || !phoneNumber || !GSTNo) {
+    const { supplierName, address, phoneNumber, GSTNo, supplierEmail } = req.body;
+    if (!supplierName || !address || !phoneNumber || !GSTNo || !supplierEmail) {
         return res.status(400).send('All fields are required');
     }
     try {
@@ -20,6 +20,7 @@ const postSupplier = async (req, res) => {
             address,
             phoneNumber,
             GSTNo,
+            supplierEmail
         });
         await newSupplier.save();
         res.status(201).json(newSupplier);
@@ -71,4 +72,18 @@ const editSupplier = async (req, res) => {
     }
 };
 
-module.exports = { postSupplier, getSupplier, getAllSupplier, editSupplier };
+const supplierDeleteById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const supplierData = await Supplier.findByIdAndDelete(id);
+        if (!supplierData) {
+            return res.status(404).json({ message: "Supplier not found" });
+        }
+        res.status(200).json({ message: 'Successfully deleted the supplier' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error while deleting supplier' });
+    }
+};
+
+module.exports = { postSupplier, getSupplier, getAllSupplier, editSupplier, supplierDeleteById };

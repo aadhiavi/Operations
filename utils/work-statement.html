@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{projectName}} Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            color: #000;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .header h3 {
+            margin: 4px 0;
+            font-size: 14px;
+        }
+
+        .header h4 {
+            margin: 4px 0 10px;
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        .record-block {
+            margin-bottom: 10px;
+            page-break-inside: avoid;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        th,
+        td {
+            padding: 6px;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+        }
+
+        th {
+            background-color: #b1e0ff;
+            font-weight: bold;
+        }
+
+        td:nth-child(4),
+        td:nth-child(5),
+        td:nth-child(6),
+        td:nth-child(7),
+        th:nth-child(4),
+        th:nth-child(5),
+        th:nth-child(6),
+        th:nth-child(7) {
+            text-align: right;
+        }
+
+        .total {
+            text-align: right;
+            font-weight: bold;
+            margin-top: 6px;
+        }
+
+        .remarks {
+            font-style: italic;
+            margin-top: 4px;
+            color: #555;
+        }
+
+        hr {
+            margin: 30px 0 10px;
+            border: none;
+            border-top: 1px solid #aaa;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>TRADE SYNDICATE (HYD)</h1>
+        <h3>{{projectName}} Daily Progress Report (DPR)</h3>
+        <h4>From {{startDate}} to {{endDate}}</h4>
+    </div>
+
+    {{#each records}}
+    <div class="record-block">
+        <p><strong>Date:</strong> {{this.date}}</p>
+
+        {{#if this.items.length}}
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Qty</th>
+                    <th>Rate</th>
+                    <th>Extra Hours</th>
+                    <th>Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each this.items}}
+                <tr>
+                    <td>{{this.type}}</td>
+                    <td>{{this.category}}</td>
+                    <td>{{this.description}}</td>
+                    <td>{{this.qty}}</td>
+                    <td>{{#if this.rate}}₹{{this.rate}}{{/if}}</td>
+                    <td>
+                        {{#if (and (eq this.type "Manpower") this.extraHours)}}
+                        {{this.extraHours}}
+                        {{else}}
+                        -
+                        {{/if}}
+                    </td>
+                    <td>₹{{this.cost}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+        {{else}}
+        <p><em>No activity recorded for this day.</em></p>
+        {{/if}}
+
+        <p class="total">Total Cost: ₹{{this.totalCost}}</p>
+
+        {{#if this.remarks}}
+        <p class="remarks"><strong>Remarks:</strong> {{this.remarks}}</p>
+        {{/if}}
+    </div>
+    {{/each}}
+
+    <hr>
+
+    <p class="total" style="font-size: 14px;">
+        Consolidated Total: ₹{{consolidatedTotal}}
+    </p>
+</body>
+
+</html>

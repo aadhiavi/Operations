@@ -27,13 +27,14 @@ const sendCreateAlerEmail = (toEmail, name, tradeId) => {
         text: `Dear ${name},
 
 Your Trade Syndicate account has been created successfully.
-Your tradeId is: ${tradeId}
+Your Trade Id is: ${tradeId}
+Your Email ID is: ${toEmail}
 
 You can now log in to our internal portal for daily tracking and operations here:
 https://ops.tradesyndicate.in
 
 Login Details:
-Email: ${toEmail}
+Trade ID: ${tradeId}
 Password: 12345
 
 (Please make sure to change your password after logging in for the first time.)
@@ -113,4 +114,27 @@ const notifyAdmin = (subject, text) => {
     return transporter.sendMail(mailOptions);
 };
 
-module.exports = { sendOtpEmail, sendWelcomeEmail, sendCreateAlerEmail, sendWelcomeEmailGoogle, sendSubscribeEmail, sendEmployeeEmail, sendBirthdayWish, notifyAdmin };
+const sendPaySlip = async (toEmail, name, tradeId, month, year, pdfBuffer) => {
+    try {
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: toEmail,
+            subject: 'Your Pay Slip',
+            text: `Dear ${name},\n\nYour pay slip for ${month} ${year} is ready.\n\nTrade ID: ${tradeId}\n\nBest regards,\nThe Trade Syndicate Team`,
+            attachments: [
+                {
+                    filename: `Payslip_${month}_${year}.pdf`,
+                    content: pdfBuffer,
+                    contentType: 'application/pdf',
+                },
+            ],
+        };
+        return await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Send Mail Error:', error);
+        throw error;
+    }
+};
+
+
+module.exports = { sendOtpEmail, sendWelcomeEmail, sendCreateAlerEmail, sendWelcomeEmailGoogle, sendSubscribeEmail, sendEmployeeEmail, sendBirthdayWish, notifyAdmin, sendPaySlip };

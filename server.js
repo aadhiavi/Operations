@@ -13,16 +13,20 @@ const supplierRoutes = require('./routes/supplierRoutes');
 const purchaseOrderRoutes = require('./routes/purchaseOrderRoutes')
 const boqRoutes = require('./routes/boqRoutes')
 const imageRoutes = require('./routes/ImageRoutes');
+const BoqUpload = require('./controllers/BoqUpload');
+const deliveryRoutes = require('./routes/deliveryRoutes');
+const inventoryRoutes = require('./routes/inventoryRoutes')
+const workHistoryRoutes = require('./routes/workHistoryRoutes')
+const contractorRoutes = require('./routes/contractorRoutes')
+const reportRoutes = require('./routes/reportRoutes')
+
 const cors = require('cors');
 const path = require('path');
 const { startBirthdayReminder } = require('./cron/birthdayReminder');
 
 const app = express();
 app.use(express.json());
-app.use(cors({
-  origin: 'https://ops.tradesyndicate.in',
-  credentials: true
-}));
+app.use(cors());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -49,6 +53,12 @@ app.use('/api/supplier', supplierRoutes)
 app.use('/api/purchase', purchaseOrderRoutes)
 app.use('/api/boq', boqRoutes)
 app.use('/api/pic', imageRoutes);
+app.use('/api/bills', BoqUpload);
+app.use('/api/delivery', deliveryRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/history', workHistoryRoutes);
+app.use('/api/contractor', contractorRoutes);
+app.use('/api/report', reportRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -11,7 +11,7 @@ const storage = new CloudinaryStorage({
             { quality: "auto:low", fetch_format: "auto" }
         ]
     },
-});
+}); 
 
 
 const upload = multer({ storage });

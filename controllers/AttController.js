@@ -5,6 +5,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const Attendance = require('../models/Attendance');
 const { isAdmin, authenticate } = require('../middleware/auth');
+const User = require('../models/User');
 const upload = multer({ dest: 'uploads/att' });
 const router = express.Router();
 
@@ -65,16 +66,39 @@ router.post('/att-upload', upload.single('file'), async (req, res) => {
                 }
 
                 try {
-                    const newRecord = new Attendance({ id, date, in: inTime, out: outTime });
-                    await newRecord.save();
-                    createdRecords.push({ id, date });
-                } catch (err) {
-                    if (err.code === 11000) {
-                        skippedRecords.push({ id, date, reason: 'Duplicate – record already exists' });
+                    const existing = await Attendance.findOne({ id, date });
+
+                    if (!existing) {
+                        const newRecord = new Attendance({ id, date, in: inTime, out: outTime });
+                        await newRecord.save();
+                        createdRecords.push({ id, date, status: 'new' });
                     } else {
-                        throw err;
+                        let shouldUpdate = false;
+
+                        // Check if new inTime is earlier
+                        if (inTime && existing.in && inTime < existing.in) {
+                            existing.in = inTime;
+                            shouldUpdate = true;
+                        }
+
+                        // Check if new outTime is later
+                        if (outTime && existing.out && outTime > existing.out) {
+                            existing.out = outTime;
+                            shouldUpdate = true;
+                        }
+
+                        if (shouldUpdate) {
+                            await existing.save();
+                            createdRecords.push({ id, date, status: 'updated' });
+                        } else {
+                            skippedRecords.push({ id, date, reason: 'Existing data is better or equal' });
+                        }
                     }
+                } catch (err) {
+                    console.error('Error processing record:', err);
+                    throw err;
                 }
+
             }
         }
 
@@ -91,28 +115,28 @@ router.post('/att-upload', upload.single('file'), async (req, res) => {
 });
 
 router.put('/att-manual-update-time', authenticate, isAdmin, async (req, res) => {
-  const { id, date, in: inTime, out: outTime } = req.body;
+    const { id, date, in: inTime, out: outTime } = req.body;
 
-  if (!id || !date || !inTime || !outTime) {
-    return res.status(400).json({ message: 'All fields (id, date, in, out) are required.' });
-  }
-
-  try {
-    const record = await Attendance.findOne({ id, date });
-
-    if (!record) {
-      return res.status(404).json({ message: 'Attendance record not found.' });
+    if (!id || !date || !inTime || !outTime) {
+        return res.status(400).json({ message: 'All fields (id, date, in, out) are required.' });
     }
 
-    record.in = inTime;
-    record.out = outTime;
-    await record.save();
+    try {
+        const record = await Attendance.findOne({ id, date });
 
-    res.json({ message: 'Attendance updated successfully.' });
-  } catch (error) {
-    console.error('Error updating attendance:', error);
-    res.status(500).json({ message: 'Server error while updating attendance.' });
-  }
+        if (!record) {
+            return res.status(404).json({ message: 'Attendance record not found.' });
+        }
+
+        record.in = inTime;
+        record.out = outTime;
+        await record.save();
+
+        res.json({ message: 'Attendance updated successfully.' });
+    } catch (error) {
+        console.error('Error updating attendance:', error);
+        res.status(500).json({ message: 'Server error while updating attendance.' });
+    }
 });
 
 router.get('/att-data/:id', async (req, res) => {
@@ -141,13 +165,55 @@ router.get('/att-data/date/:date', async (req, res) => {
 
 router.get('/att-data-all', authenticate, isAdmin, async (req, res) => {
     try {
-        const attendanceData = await Attendance.find({});
-        res.json(attendanceData);
+        const [attendanceData, users] = await Promise.all([
+            Attendance.find({}),
+            User.find({})
+        ]);
+
+        const userMap = {};
+        users.forEach(user => {
+            userMap[user.tradeId] = user.name;
+        });
+
+        // Merge user name into attendance
+        const enrichedAttendance = attendanceData.map(att => ({
+            ...att._doc, // spread MongoDB document
+            name: userMap[att.id] || 'Unknown'
+        }));
+
+        res.json(enrichedAttendance);
     } catch (error) {
+        console.error('Error in get-att-all:', error);
         res.status(500).json({ message: 'Error fetching data from the database' });
     }
-}
-)
+})
+
+// router.get('/get-att-all', async (req, res) => {
+//     try {
+//         const [attendanceData, users] = await Promise.all([
+//             Attendance.find({}),
+//             User.find({})
+//         ]);
+
+//         // Create a map for quick lookup: { "7004": "Sony" }
+//         const userMap = {};
+//         users.forEach(user => {
+//             userMap[user.tradeId] = user.name;
+//         });
+
+//         // Merge user name into attendance
+//         const enrichedAttendance = attendanceData.map(att => ({
+//             ...att._doc, // spread MongoDB document
+//             name: userMap[att.id] || 'Unknown'
+//         }));
+
+//         res.json(enrichedAttendance);
+//     } catch (error) {
+//         console.error('Error in get-att-all:', error);
+//         res.status(500).json({ message: 'Error fetching data from the database' });
+//     }
+// });
+
 
 router.post('/att-manual-post', async (req, res) => {
     const { id, date, in: inTime, out: outTime } = req.body;

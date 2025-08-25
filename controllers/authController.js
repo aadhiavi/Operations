@@ -3,6 +3,39 @@ const jwt = require('jsonwebtoken');
 const { generateOtp, sendOtp, setTemporaryPassword } = require('../utils/otp');
 const { sendOtpEmail, sendWelcomeEmail, sendCreateAlerEmail } = require('../config/mailer');
 const User = require('../models/User');
+const SalaryFixed = require('../models/SalaryFixed');
+
+
+// const adminCreateUser = async (req, res) => {
+//     const { name, email, tradeId, role } = req.body;
+
+//     try {
+//         const existingUser = await User.findOne({ $or: [{ email }, { tradeId }] });
+//         if (existingUser) return res.status(400).json({ message: 'User already exists' });
+
+//         const tempPassword = '12345';
+//         const hashedPassword = await bcrypt.hash(tempPassword, 12);
+
+//         const user = new User({
+//             name,
+//             email,
+//             tradeId,
+//             password: hashedPassword,
+//             role,
+//             isVerified: true 
+//         });
+
+//         // Set temp password for future enforcement
+//         user.temporaryPassword = hashedPassword;
+//         user.temporaryPasswordExpires = Date.now() + 7 * 24 * 60 * 60 * 1000;
+//         await user.save();
+//         await sendCreateAlerEmail(email, name, tradeId);
+//         res.status(201).json({ message: 'User created successfully with temp password 12345' });
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).json({ message: 'Server error' });
+//     }
+// };
 
 
 const adminCreateUser = async (req, res) => {
@@ -21,14 +54,17 @@ const adminCreateUser = async (req, res) => {
             tradeId,
             password: hashedPassword,
             role,
-            isVerified: true // optional: mark verified by admin
+            temporaryPassword: hashedPassword,
+            temporaryPasswordExpires: Date.now() + 7 * 24 * 60 * 60 * 1000
         });
 
-        // Set temp password for future enforcement
-        user.temporaryPassword = hashedPassword;
-        user.temporaryPasswordExpires = Date.now() + 7 * 24 * 60 * 60 * 1000;
+        // Automatically set isVerified based on temporaryPassword field
+        user.isVerified = user.temporaryPassword ? false : true;
+
         await user.save();
+
         await sendCreateAlerEmail(email, name, tradeId);
+
         res.status(201).json({ message: 'User created successfully with temp password 12345' });
     } catch (err) {
         console.error(err);
@@ -296,6 +332,23 @@ const adminImpersonate = async (req, res) => {
     }
 };
 
+const deleteUser = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const user = await User.findByIdAndDelete(id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // Delete fixed salary records associated with the user
+        await SalaryFixed.deleteMany({ tradeId: user.tradeId });
+
+        res.status(200).json({ message: 'User and associated fixed salary deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 
 
 module.exports = {
@@ -311,5 +364,6 @@ module.exports = {
     assignTemporaryPassword,
     adminCreateUser,
     adminImpersonate,
-    isBlockedUser
+    isBlockedUser,
+    deleteUser
 };

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Payslip - {{employee.name}}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      color: #000;
+      padding: 20px;
+      margin: 0;
+      background: #fff;
+    }
+
+    .payslip-container {
+      max-width: 800px;
+      margin: 0 auto;
+      border: 1px solid #000;
+      padding: 10px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #000;
+    }
+
+    .header img {
+      max-width: 250px;
+      height: auto;
+    }
+
+    .header p {
+      margin: 3px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+
+    td,
+    th {
+      padding: 4px 6px;
+      vertical-align: top;
+    }
+
+    .details-table td {
+      border: none;
+    }
+
+    .details-table td span {
+      width: 100px;
+      display: inline-block;
+    }
+
+    .section-title {
+      text-align: center;
+      padding: 6px 0;
+    }
+
+    .salary-table td {
+      border: 1px solid #000;
+    }
+
+    .salary-table th {
+      border: 1px solid #000;
+      text-align: center;
+      font-weight: 400
+    }
+
+    .footer {
+      padding-top: 6px;
+      text-align: left;
+    }
+
+    .right-align {
+      text-align: right;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="payslip-container">
+    <div class="header">
+      <img src="https://www.tradesyndicate.in/assets/Trade%20Logo-BoJYB5ea.png" alt="company logo">
+      <p>Trade Syndicate Group of Companies</p>
+      <p>Plot no 128 Gunrock Enclave, Transport Road Kharkhana, Secunderabad,Hyderabad Telangana, PIN 500009</p>
+      <p>Payslip for {{payrollInfo.month}} {{payrollInfo.year}}</p>
+    </div>
+
+    <table class="details-table">
+      <tr>
+        <td><span>EmpCode </span>: {{employee.tradeId}}</td>
+        <td><span>ESI No. </span>: {{employee.esi}}</td>
+      </tr>
+      <tr>
+        <td><span>Emp Name </span>: {{employee.name}}</td>
+        <td><span>UAN </span>: {{employee.uan}}</td>
+      </tr>
+      <tr>
+        <td><span>Designation </span>: {{employee.designation}}</td>
+        <td><span>Location </span>: {{employee.location}}</td>
+      </tr>
+      <tr>
+        <td><span>DOJ </span>: {{employee.doj}}</td>
+        <td><span>Month Days</span>: {{payrollInfo.totalDays}}</td>
+      </tr>
+      <tr>
+        <td><span>Bank A/c No. </span>: {{employee.bankAccount}}</td>
+        <td><span>Paid Days</span>: {{payrollInfo.payableDays}}</td>
+      </tr>
+      <tr>
+        <td><span>Bank Name </span>: {{employee.bankName}}</td>
+        <td></td>
+      </tr>
+    </table>
+
+    <table class="salary-table">
+      <tr>
+        <th>Earnings R.S</th>
+        <th>Standard</th>
+        <th>Earned</th>
+        <th colspan="2">Deduction R.S</th>
+      </tr>
+      <tr>
+        <td>Basic</td>
+        <td class="right-align">{{formatINR earnings.basic.standard}}</td>
+        <td class="right-align">{{formatINR earnings.basic.earned}}</td>
+        <td>Provident Fund</td>
+        <td class="right-align">{{formatINR deductions.pf}}</td>
+      </tr>
+      <tr>
+        <td>HRA</td>
+        <td class="right-align">{{formatINR earnings.hra.standard}}</td>
+        <td class="right-align">{{formatINR earnings.hra.earned}}</td>
+        <td>ESI</td>
+        <td class="right-align">{{formatINR deductions.esi}}</td>
+      </tr>
+      <tr>
+        <td>Conveyance</td>
+        <td class="right-align">{{formatINR earnings.conveyance.standard}}</td>
+        <td class="right-align">{{formatINR earnings.conveyance.earned}}</td>
+        <td>PT</td>
+        <td class="right-align">{{formatINR deductions.tax}}</td>
+      </tr>
+      <tr>
+        <td>Medical Allowance</td>
+        <td class="right-align">{{formatINR earnings.medical.standard}}</td>
+        <td class="right-align">{{formatINR earnings.medical.earned}}</td>
+        <td>Other Deductions</td>
+        <td class="right-align">{{formatINR deductions.other}}</td>
+      </tr>
+
+      {{#if earnings.specialAllowance.standard}}
+      <tr>
+        <td>Special Allowance</td>
+        <td class="right-align">{{formatINR earnings.specialAllowance.standard}}</td>
+        <td class="right-align">{{formatINR earnings.specialAllowance.earned}}</td>
+        <td></td>
+        <td></td>
+      </tr>
+      {{/if}}
+
+      {{#if earnings.bonus.standard}}
+      <tr>
+        <td>Bonus</td>
+        <td class="right-align">{{formatINR earnings.bonus.standard}}</td>
+        <td class="right-align">{{formatINR earnings.bonus.earned}}</td>
+        <td></td>
+        <td></td>
+      </tr>
+      {{/if}}
+
+      <tr>
+        <td>Total Earnings</td>
+        <td class="right-align">{{formatINR totals.totalStandard}}</td>
+        <td class="right-align">{{formatINR totals.totalEarnings}}</td>
+        <td class="bold">Total Deductions</td>
+        <td class="right-align">{{formatINR totals.totalDeductions}}</td>
+      </tr>
+      <tr>
+        <td>Net Pay</td>
+        <td colspan="4" class="right-align">{{formatINR totals.netPay}}</td>
+      </tr>
+    </table>
+
+    <div class="footer">
+      <p class="net-pay-text">Net Amount in words :
+        {{#if totals.netPayWords}}{{totals.netPayWords}}{{/if}}
+      </p>
+      <p>This is Computer Generated Payslip no signature is required</p>
+    </div>
+  </div>
+</body>
+
+</html>

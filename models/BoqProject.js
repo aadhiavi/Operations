@@ -45,7 +45,6 @@ const boqProjectSchema = new mongoose.Schema({
   name: { type: String, required: true },
   clientName: { type: String },
   location: { type: String },
-  budget: { type: Number },
   phases: [boqPhaseSchema],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

@@ -7,7 +7,7 @@ const handlebars = require('handlebars');
 const Employee = require('../models/Employee');
 const inWords = require('inr-words');
 const { sendPaySlip } = require('../config/mailer');
-const Payroll = require('../models/PayRoll');
+const PayrollModel = require('../models/PayrollModel');
 
 
 const getAllUsers = async (req, res) => {
@@ -89,14 +89,14 @@ const saveDraftPayroll = async (req, res) => {
     const { userId } = req.params;
     const { month, year } = req.body;
 
-    let draft = await Payroll.findOne({ userId, month, year, isDraft: true });
+    let draft = await PayrollModel.findOne({ userId, month, year, isDraft: true });
 
     if (draft) {
       Object.assign(draft, req.body);
       await draft.save();
       return res.status(200).json({ message: 'Draft updated', draft });
     }
-    draft = new Payroll({ userId, ...req.body, isDraft: true });
+    draft = new PayrollModel({ userId, ...req.body, isDraft: true });
     await draft.save();
     res.status(201).json({ message: 'Draft saved', draft });
   } catch (error) {
@@ -109,7 +109,7 @@ const getDraftPayrolls = async (req, res) => {
     const { month, year } = req.query;
     if (!month || !year) return res.status(400).json({ message: 'Month and year required' });
 
-    const drafts = await Payroll.find({ month, year, isDraft: true });
+    const drafts = await PayrollModel.find({ month, year, isDraft: true });
     res.status(200).json(drafts);
   } catch (error) {
     console.error('Fetch drafts error:', error);
@@ -122,7 +122,7 @@ const submitPayroll = async (req, res) => {
     const { month, year } = req.body;
 
     // Find existing draft
-    let draft = await Payroll.findOne({ userId, month, year, isDraft: true });
+    let draft = await PayrollModel.findOne({ userId, month, year, isDraft: true });
 
     if (draft) {
       draft.isDraft = false; // finalize payroll
@@ -131,7 +131,7 @@ const submitPayroll = async (req, res) => {
     }
 
     // If no draft, create new final payroll
-    const payroll = new Payroll({ userId, ...req.body, isDraft: false });
+    const payroll = new PayrollModel({ userId, ...req.body, isDraft: false });
     await payroll.save();
     res.status(201).json({ message: 'Payroll submitted', payroll });
   } catch (error) {
@@ -159,7 +159,7 @@ const getFinalPayrolls = async (req, res) => {
     const { month, year } = req.query;
     if (!month || !year) return res.status(400).json({ message: 'Month and year required' });
 
-    const finalPayrolls = await Payroll.find({ month, year, isDraft: false });
+    const finalPayrolls = await PayrollModel.find({ month, year, isDraft: false });
     res.status(200).json(finalPayrolls);
   } catch (error) {
     console.error('Fetch final payrolls error:', error);
@@ -172,7 +172,7 @@ const getFinalPayrolls = async (req, res) => {
 const getPayDataByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
-    const payroll = await Payroll.find({ userId });
+    const payroll = await PayrollModel.find({ userId });
     if (!payroll) {
       return res.status(404).json({ message: 'Payroll not found for user' });
     }
@@ -192,7 +192,7 @@ const getPayslip = async (req, res) => {
     }
 
     const [payroll, fixedSalary, user, employee] = await Promise.all([
-      Payroll.findOne({ userId, month, year }),
+      PayrollModel.findOne({ userId, month, year }),
       SalaryFixed.findOne({ userId }),
       User.findById(userId),
       Employee.findOne({ user: userId }),
@@ -298,7 +298,7 @@ const getPayslipPdf = async (req, res) => {
     }
 
     const [payroll, fixedSalary, user, employee] = await Promise.all([
-      Payroll.findOne({ userId, month, year }),
+      PayrollModel.findOne({ userId, month, year }),
       SalaryFixed.findOne({ userId }),
       User.findById(userId),
       Employee.findOne({ user: userId }),

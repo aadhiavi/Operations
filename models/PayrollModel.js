@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const payrollSchema = new mongoose.Schema({
+const payrollModelSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -83,5 +83,5 @@ const payrollSchema = new mongoose.Schema({
 
 payrollSchema.index({ userId: 1, month: 1, year: 1, isDraft: 1 }, { unique: true });
 
-const Payroll = mongoose.model('Payroll', payrollSchema);
-module.exports = Payroll;
+const PayrollModel = mongoose.model('PayrollModel', payrollModelSchema);
+module.exports = PayrollModel;

@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "install-chrome": "node node_modules/puppeteer/install.js",
+    "install-chrome": "PUPPETEER_CACHE_DIR=.cache node node_modules/puppeteer/install.js",
     "render-build": "npm run install-chrome"
   },
   "keywords": [],

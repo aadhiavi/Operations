@@ -2,12 +2,12 @@
   "name": "server",
   "version": "1.0.0",
   "main": "server.js",
-"scripts": {
-  "start": "node server.js",
-  "dev": "nodemon server.js",
-  "install-chrome": "node node_modules/puppeteer/install.js",
-  "render-build": "npm run install-chrome"
-},
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "install-chrome": "node node_modules/puppeteer/install.js",
+    "render-build": "npm run install-chrome"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -36,7 +36,7 @@
     "openai": "^5.13.1",
     "path": "^0.12.7",
     "pdfkit": "^0.17.1",
-    "puppeteer": "^24.16.0",
+    "puppeteer": "^24.17.1",
     "string-similarity": "^4.0.4",
     "xlsx": "^0.18.5"
   },

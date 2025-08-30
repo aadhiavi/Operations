@@ -118,6 +118,9 @@ const verifyOtpRegistration = async (req, res) => {
 
 const loginUser = async (req, res) => {
     const { tradeId, password } = req.body;
+    if (!tradeId || !password) {
+        return res.status(400).json({ message: 'Trade ID and password are required' });
+    }
     try {
         const user = await User.findOne({ tradeId });
         if (!user) return res.status(400).json({ message: 'Invalid credentials' });
@@ -139,7 +142,11 @@ const loginUser = async (req, res) => {
         const requiresPasswordReset = isTempPasswordValid;
 
         const token = jwt.sign(
-            { userId: user._id, role: user.role },
+            {
+                userId: user._id,
+                tradeId: user.tradeId,
+                role: user.role
+            },
             process.env.JWT_SECRET,
             { expiresIn: '9h' }
         );

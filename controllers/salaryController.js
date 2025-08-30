@@ -18,6 +18,7 @@ const getAllUsers = async (req, res) => {
     res.status(500).json({ message: 'Error fetching users' });
   }
 };
+
 const createFixedSalary = async (req, res) => {
   try {
     const { name, tradeId, userId } = req.body;
@@ -104,6 +105,7 @@ const saveDraftPayroll = async (req, res) => {
     res.status(500).json({ message: 'Server error saving draft' });
   }
 };
+
 const getDraftPayrolls = async (req, res) => {
   try {
     const { month, year } = req.query;
@@ -116,6 +118,7 @@ const getDraftPayrolls = async (req, res) => {
     res.status(500).json({ message: 'Server error fetching drafts' });
   }
 };
+
 const submitPayroll = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -412,7 +415,11 @@ const getPayslipPdf = async (req, res) => {
     });
 
     // Generate PDF
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      executablePath: puppeteer.executablePath(), // Ensure it uses the installed binary
+      args: ['--no-sandbox', '--disable-setuid-sandbox'] // Required for Render/Linux
+    });
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
 

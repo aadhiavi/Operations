@@ -216,7 +216,11 @@ const getPdf = async (req, res) => {
     });
 
     // Render PDF with Puppeteer
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+        headless: 'new',
+        executablePath: puppeteer.executablePath(), // Ensure it uses the installed binary
+        args: ['--no-sandbox', '--disable-setuid-sandbox'] // Required for Render/Linux
+    });
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
 

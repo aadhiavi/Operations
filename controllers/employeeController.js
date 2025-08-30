@@ -20,7 +20,7 @@ const getPersonalDetails = async (req, res) => {
   }
 };
 
-const getAllEmp =  async (req, res) => {
+const getAllEmp = async (req, res) => {
   const employees = await Employee.find();
   res.json(employees);
 };
@@ -78,6 +78,54 @@ const getMyPersonalDetails = async (req, res) => {
   }
 };
 
+const getBirthdayThisYear = (dob, year = new Date().getFullYear()) => {
+  return new Date(year, dob.getMonth(), dob.getDate());
+};
+
+const getSortedBirthdays = async (req, res) => {
+  try {
+    const today = new Date();
+    const allEmployees = await Employee.find({});
+
+    const upcoming = [];
+    const recent = [];
+
+    allEmployees.forEach(emp => {
+      const dob = new Date(emp.dob);
+      let thisYearBirthday = getBirthdayThisYear(dob);
+      const daysDiff = Math.floor((thisYearBirthday - today) / (1000 * 60 * 60 * 24));
+
+      const birthdayData = {
+        _id: emp._id,
+        name: emp.name,
+        email: emp.email,
+        dob: emp.dob,
+        department: emp.department,
+        designation: emp.designation,
+        birthdayThisYear: thisYearBirthday,
+        daysFromToday: daysDiff
+      };
+
+      if (daysDiff >= 0 && daysDiff <= 60) {
+        upcoming.push(birthdayData);
+      } else if (daysDiff < 0 && daysDiff >= -60) {
+        birthdayData.daysFromToday = daysDiff; // already negative
+        recent.push(birthdayData);
+      }
+    });
+
+    // Sort lists
+    upcoming.sort((a, b) => a.daysFromToday - b.daysFromToday);
+    recent.sort((a, b) => b.daysFromToday - a.daysFromToday);
+
+    res.json({ upcoming, recent });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+
 module.exports = {
   getAllUsers,
   getPersonalDetails,
@@ -86,4 +134,5 @@ module.exports = {
   deletePersonalDetails,
   getMyPersonalDetails,
   getAllEmp,
+  getSortedBirthdays
 };

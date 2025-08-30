@@ -19,6 +19,7 @@ const inventoryRoutes = require('./routes/inventoryRoutes')
 const workHistoryRoutes = require('./routes/workHistoryRoutes')
 const contractorRoutes = require('./routes/contractorRoutes')
 const reportRoutes = require('./routes/reportRoutes')
+const noteRoutes = require('./routes/noteRoutes')
 
 const cors = require('cors');
 const path = require('path');
@@ -26,7 +27,7 @@ const { startBirthdayReminder } = require('./cron/birthdayReminder');
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: "*" }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -59,6 +60,8 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/history', workHistoryRoutes);
 app.use('/api/contractor', contractorRoutes);
 app.use('/api/report', reportRoutes);
+// app.use('/api/note', noteRoutes)
+app.use('/api/chat', noteRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
